@@ -15,6 +15,8 @@ chain表示关联完成，chainAll表示所有关联成功完成，chainError表
    渲染事件依赖于数据库查询与模板加载事件，当数据库查询完成并且模板加载完成后会触发渲染事件。
    每一个事件的第一个参数都是next回调函数，执行函数若传递参数true表示当前事件操作失败，若不传递参数则表示当前回调函数执行成功。
    通过next来通知事件是否完成，它是依赖关系处理的关键所在！
+   
+   
 		var myevent = new NickEvents();
 		var randTime = function(){
 			return parseInt(Math.random()*1000);	

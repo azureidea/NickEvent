@@ -441,7 +441,6 @@
 			var gc = function() {
 				//仅随机数为0时执行垃圾回收 随机数越大垃圾回收概率越小
 				if(parseInt(Math.random() * _this.gc)) return;
-				console.log('gc')
 				//异步执行
 				setTimeout(function() {
 					var key;

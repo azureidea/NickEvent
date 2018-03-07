@@ -71,9 +71,11 @@ var NickEvents = function() {
 					/**
 					 * @property {Array} chains.queue 保存任务链执行结果的数组队列
 					 * @property {Number} chains.count 保存任务链队列执行的成功次数 用于判断任务链是否全部成功执行
+					 * @property {Object} chains.arg  保存任务链队列参数，即每一个任务都可以传递一个参数，有多少个任务就有多少个参数，以便在触发时调用，一组任务只有最后一次next传递的参数会被保存起来！
 					 */
 					chains.queue = [];
 					chains.count = 0;
+					chains.arg = {};
 					//在任务链关系对象中以事件名称为属性，一个事件可能有多个任务链关系以数组形式保存
 					if(!__chainsRelation[eventName]) __chainsRelation[eventName] = {};
 					// 将任务链关系数组及任务链关系索引对象存储在 任务链关系对象中
@@ -143,7 +145,7 @@ var NickEvents = function() {
 	 * @param {Number} success 当前事件有多少个回调函数是成功的
 	 * @param {Number} error   当前事件有多少个回调函数是失败的
 	 */
-	var listening = function(eventName, count, success, error){
+	var listening = function(eventName, count, success, error, arg){
 		//每一组事件的完成都将触发该回调函数并且遍历任务链关联关系以检测任务链中的关系是否匹配，如果匹配则会触发执行
 		for(var type in __chainsRelation){
 			//遍历任务链关系数组 
@@ -163,6 +165,8 @@ var NickEvents = function() {
 				if(chainsIndex[eventName]){
 					//将当前的事件存储到任务链队列中，当任务全部完成时比较队列中的任务执行顺序与任务链的顺序是否一致，以判断是顺序执行还是非顺序执行
 					chains.queue.push(eventName);
+					//将当前事件的参数存储到任务链接参数中，每一个事件都有对应的参数
+					chains.arg[eventName] = arg;
 					//如果当前事件的失败回调函数为0 chains.count则+1 如果任务链全部执行完成并且chains.count值等于任务链长度表示所有任务均全部成功执行
 					if(!error) chains.count++;
 					/**
@@ -181,6 +185,7 @@ var NickEvents = function() {
 							 * @type {Boolean} chainAll 布尔值 判断任务链接是否全部成功执行，如果任务链成功执行的计数等于任务链长度表示全部成功执行
 							 * @type {Boolean} chainError 布尔值  如果任务链成功执行计算为0 则表示任务链全部执行失败
 							 * @type {Number} chainType 数值用于表示任务链的执行类型
+							 * @type {Array} args 每组事件执行完成后传递进来的参数，每个next方法的第二个参数为需要进行传递的参数，一组事件仅最后一个执行的事件会将参数传递出去！
 							 *  1 顺序全完成   2 顺序全成功  3 顺序全失败
 							 *  3 无序全完成   5 无序全成功  6 无序全失败
 							 * 如果isQueue为真则表示顺序执行否则为无序执行
@@ -198,13 +203,14 @@ var NickEvents = function() {
 								chainType = chainAll ? 5 : chainError ? 6 : 4;
 							}
 							//如果全部成功或全部失败强制执行全部完成任务，如果是顺序执行全部完成值为1 无序全部完成值为4
-							if (chainAll || chainError) emit(true, isQueue, sortChains, isQueue ? 1 : 4 ).call(_this,type);
+							if (chainAll || chainError) emit(true, isQueue, sortChains, isQueue ? 1 : 4 ).call(_this, type, chains.arg);
 							//调用任务链事件 
-							emit(true, isQueue, sortChains, chainType).call(_this,type);
+							emit(true, isQueue, sortChains, chainType).call(_this, type, chains.arg);
 						}
 						//任务链完成还原初始化 重新计数并清理队列
 						chains.queue = [];
 						chains.count = 0;
+						chains.arg = {};
 					}
 				}
 			}
@@ -242,13 +248,16 @@ var NickEvents = function() {
 			 * @description 每一个事件的回调函数中的第一个参数为next函数，当执行next回调的时候就会触发回调函数执行统计
 			 * 如果希望准确的知道有多少个事件完成，有多少事件成功或失败必须执行此next函数，参数为布尔值，若为真则表示回调函数执行失败
 			 * 任务链执行依赖此函数来统计事件的执行情况！
-			 * @param {Boolean} isError 判断事件执行是否失败
+			 * 目前一个事件仅最后一个执行next的回调函数传递进来 的参数被保存，如果希望事件中所有的回调函数执行next传递的参数都将被保存则需要写一个对象去保存这些参数，
+			 * 当前只保留了一个，同样也是为了让逻辑更清晰，如果一个事件有若干个回调函数每一个都要给数据会让逻辑更混乱！并且建议任务链上的事件都只有一个回调函数！
+			 * 如果真的有需求则需要改写此方法只需要改写当前next位置即可，将emit和listening位置 的arg变量变成保存了所有事件参数的数组即可。
+			 * @param {Boolean} isSuccess 判断事件执行是否失败
 			 */
-			var next = function(isError){							
+			var next = function(isSuccess, arg){		
 				//无论回调函数执行成功或失败都计数+1
 				eventsCount.count++;
 				//当执行失败时失败计数+1
-				if(isError) eventsCount.error++;
+				if(!isSuccess) eventsCount.error++;
 				//当执行数大于等于事件列表长度时表示该事件类型下的回调函数都执行完毕 然后触发listening回调函数
 				if(eventsCount.count >= length){
 					var count = eventsCount.count;
@@ -257,10 +266,10 @@ var NickEvents = function() {
 					//为了防止修改以及执行优先性将任务链执行逻辑通过listening回调函数完成
 					//由于先执行的emit事件用户操作完成才调用next导致在listening阶段对数组的关联队列操作出现提前的问题，因此要延迟执行保证队列执行顺序正常
 					setTimeout(function(){
-					//触发listening事件 并将事件的执行结果传递
-					_this.emit('listening', eventName, count, count - error, error);
-						listening(eventName, count, count - error, error);
-					})
+						//触发listening事件 并将事件的执行结果传递
+						_this.emit('listening', eventName, count, count - error, error, arg);
+						listening(eventName, count, count - error, error, arg);
+					});
 				}
 			};
 			//listeing事件不提供next统计方法 防止进入列循环，且listeing只供监听不能作为任务链进行统计调用

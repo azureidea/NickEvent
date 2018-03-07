@@ -578,17 +578,10 @@
 								target.dataset.events.split(';').forEach(function(tmp){
 									//将事件属性拆分成key value形式
 									tmp = tmp.split('=');
-									var eventType = tmp[0];
 									var eventHandler = tmp[1];
-									//如果有事件类型及事件处理程序  并且有事件路由对象
-									if(eventType && eventHandler && _this.eventsRouter){
-										//根据事件类型查找对应的事件跌幅对象
-										var eventsRouter = _this.eventsRouter[eventType];
-										//如果有对应的事件路由对象并且指定的事件处理程序在路由中存在且是函数则执行该另设 函数
-										if(eventsRouter && isFunction(eventsRouter[eventHandler])){
-											//执行指定的路由 将this指向当前对象并传递必要的参数
-											eventsRouter[eventHandler].call(_this,target,e,event);
-										}
+									//如果元素的data-disabled 为true则表示按钮禁用，不为true即可执行事件
+									if(target.dataset.disabled != 'true'){
+										_this.emit(eventHandler, target, e, event);
 									}
 								});
 							}

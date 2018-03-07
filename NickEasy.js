@@ -139,7 +139,7 @@
 					//通过classList删除老的类名添加新的类名
 					var classList = element.classList;
 					classList.remove(old);
-					classList.add(data);
+					if(data) classList.add(data);
 				}
 			};
 			/**

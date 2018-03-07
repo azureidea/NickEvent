@@ -175,24 +175,59 @@
 				 * @param {Element} fragment 代码片段
 				 */
 				var cloneNode = function(isText, result, textNode, nickNode, fragment) {
-					var element;
+					/**
+					 * @type {String} key 绑定关联关系的数据名称
+					 * @type {Element} 将插入页面的克隆的节点
+					 */
+					var key;
+					var element = textNode.cloneNode();
 					//如果是文本节点并且文本不是全空 克隆文本节点并设置文本内容
 					if(isText && /\S/.test(result)) {
-						element = textNode.cloneNode();
 						element.nodeValue = result;
 					} else if(!isText) {
-						//如果不是文本节点克隆nick节点，并将表达式通过eval解析设置为新节点的html内容
-						element = nickNode.cloneNode();
-						element.innerHTML = $eval.call(_this, result);
-						//遍历新节点中的所有子节点并添加到代码片段中 最后的结果不包含nick标签本身
-						[].forEach.call(element.childNodes, function(element) {
-							fragment.appendChild(element);
-						});
-						element = null;
+						//将表达式两侧空白字符清除
+						key = result.replace(/^\s+|\s+$/,'');
+						//从state中读取数据
+						result = state[key];
+						//更新节点内容 如果是undefined则不会显示任何内容，但文本节点依旧存在
+						element.nodeValue = result;
+						//添加到关联数组中
+						addRelation(element, key , 'nodeValue',  []);
 					}
 					//将节点添加到文档片段
 					if(element) fragment.appendChild(element);
 				};
+				/**
+				 * @description 检测元素是否在关联数组中如果不存在则保存到关联数组中
+				 * @param {Element} element 要检测的元素
+				 * @param {String} key 要绑定的数据名称
+				 * @param {String} attribute 与元素关联的属性名
+				 * @param {Array} template 保存的模板数据
+				 */
+				var addRelation = function(element, key, attribute, template){
+					//如果当前要绑定的数据名称在关联对象中不存在则创建
+					if(!__relations[key]) __relations[key] = [];
+					/**
+					 * @type {Boolean} inRelation 判断当前元素是否已经在关联数组中
+					 * @type {Number} index 用于遍历关联数组的索引值
+					 * @type {Array} relation 当前数据名称对应的关联数组
+					 * @type {Number} length 关联数组的长度
+					 */
+					var inRleation;
+					var index = 0;
+					var relation = __relations[key];
+					var length = relation.length;
+					//遍历关联数组
+					for(; index < length; index++) {
+						//如果当前元素已经在关联数组中退出循环，为了防止内存泄漏一定要防止重复存入相同的元素
+						if(element == relation[index][0]) {
+							inRleation = true;
+							break;
+						}
+					}
+					//如果当前元素不在关联数组中 则向关联数组中添加关联关系
+					if(!inRleation) __relations[key].push([element, attribute, template]);
+				};				
 				/**
 				 * @description 递归查询节点的函数，每一个元素都会被递归查找，对文本节点和标签节点分别处理
 				 * @param {Object} element
@@ -254,28 +289,8 @@
 									//更新模板数组
 									template = [html, template];
 								}
-								//如果当前要绑定的数据名称在关联对象中不存在则创建
-								if(!__relations[value]) __relations[value] = [];
-								/**
-								 * @type {Boolean} inRelation 判断当前元素是否已经在关联数组中
-								 * @type {Number} index 用于遍历关联数组的索引值
-								 * @type {Array} relation 当前数据名称对应的关联数组
-								 * @type {Number} length 关联数组的长度
-								 */
-								var inRleation;
-								var index = 0;
-								var relation = __relations[value];
-								var length = relation.length;
-								//遍历关联数组
-								for(; index < length; index++) {
-									//如果当前元素已经在关联数组中退出循环，为了防止内存泄漏一定要防止重复存入相同的元素
-									if(element == relation[index][0]) {
-										inRleation = true;
-										break;
-									}
-								}
-								//如果当前元素不在关联数组中 则向关联数组中添加关联关系
-								if(!inRleation) __relations[value].push([element, key, template]);
+								//添加到关联数组中
+								addRelation(element, value, key, template);
 							});
 						};
 						//遍历当前元素的子节点并继续进行递归处理
@@ -443,29 +458,45 @@
 				if(parseInt(Math.random() * _this.gc)) return;
 				//异步执行
 				setTimeout(function() {
+					/**
+					 * @type {String} key 关联的数据名称
+					 * @type {Array} relation 关联数组
+					 * @type {Number} index 遍历关联数组的索引值
+					 * @type {Number} length 关联数组的长度
+					 * @type {Array} tmp 关联数组中取出的数组 里面保存了关联关系
+					 * @type {Element} element 当前关联的元素对象
+					 * @type {Element} elementParent 当前关联元素的父级对象 
+					 */
 					var key;
 					var relation;
+					var index ;
+					var length;
+					var tmp;
+					var element;
+					var elementParent;
 					//遍历关联数据
 					for(key in __relations) {
 						//获取指定数据的关联数组
 						relation = __relations[key];
+						//初始化遍历索引
+						index = 0;
+						//获取关联数组长度
+						length = relation.length;
 						//遍历关联数组
-						relation.forEach(function(element, index) {
-							//取出数组中存储的元素
-							var element = element[0];
-							//逐级向上查找元素的父级，如果元素的父级不存在则当前元素不存在。 如果结构是 ul>li>b 当b消失后其父级li ul都是存在的  只能向上查找当发现ul无父级时才能确认当前元素不在DOM中
-							while(element && element.tagName != 'BODY') {
-								element = element.parentNode;
-								if(!element) {
-									//当元素没有父级时表示已经从页面中清除，将当前元素从关联数组中清除并终止查找
-									relation.splice(index, 1);
-									break;
-								}
+						for(; index < length; index++){
+							tmp = relation[index];
+							element = tmp[0];
+							elementParent = element.parentNode;
+							//如果当前元素的DOM连接属性为false表示已不在DOM中，该属性低版本不支持，或者该元素没有父级，或者 该元素不是父级的后代，或者该元素不是页面文档的后代那么将元素从数组中清除
+							// contains方法在检测时 如果父子都不在文档中 但对父级使用contains依然返回true因为它们还是后代关系，但子级相对于页面文档已经不是，因为它们都不在文档中，为了更高效优先判断连接及父级检测，都不成立再从文档上检测
+							if(element.isConnected === false || !elementParent ||  !elementParent.contains(element) || !_document.contains(element)){
+								relation.splice(index, 1);
+								index--;
+								length--;
 							}
-						});
+						}
 					}
 				});
-
 			};
 			/**
 			 * @description 事件路由处理函数，所有的事件都绑定在当前对象的根节点上，事件触发时逐级向上查找当查找到根元素时终止

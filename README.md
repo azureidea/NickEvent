@@ -24,28 +24,28 @@ chain表示关联完成，chainAll表示所有关联成功完成，chainError表
 		myevent.on('load-config',function(next){
 			setTimeout(function(){
 				console.log('加载数据库配置文件成功');
-				next();
+				next(true);
 			},randTime());
 		});
-		myevent.chainAll('connect-db',['load-config'],function(next){
+		myevent.asyncAll('connect-db',['load-config'],function(next){
 			setTimeout(function(){
-				console.log('连接数据库成功'); next();
+				console.log('连接数据库成功'); next(true);
 			},randTime());
 		});
-		myevent.chain('select-db',['connect-db'],function(next){
+		myevent.asyncAll('select-db',['connect-db'],function(next){
 			setTimeout(function(){
-				console.log('查询数据成功');	next();
+				console.log('查询数据成功');	next(true,'数据库的数据'+Date.now());
 			},randTime());
 		});
 		myevent.on('load-template',function(next){
 			setTimeout(function(){
-				console.log('加载模板成功');	next();
+				console.log('加载模板成功');	next(true,'模板给的数据'+Date.now());
 			},randTime());
 		});
-		myevent.chainAsyncAll('render',['select-db','load-template'],function(next){
-			setTimeout(function(){
-				console.log('渲染成功');		next();
-			},randTime());
+		myevent.asyncAll('render',['select-db','load-template'],function(next, arg){
+			//setTimeout(function(){
+				console.log('渲染成功',arg);		next(true);
+			//},randTime());
 		});
 		myevent.emit('load-config');
 		myevent.emit('load-template');
@@ -53,4 +53,4 @@ chain表示关联完成，chainAll表示所有关联成功完成，chainError表
 		setTimeout(function(){
 			myevent.emit('load-config');
 			myevent.emit('load-template');
-		},5000);
+		},2000);

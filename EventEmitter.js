@@ -202,10 +202,15 @@ var NickEvents = function() {
 								//如果是无序运行  全部成功为5 全部失败为6  否则为4
 								chainType = chainAll ? 5 : chainError ? 6 : 4;
 							}
-							//如果全部成功或全部失败强制执行全部完成任务，如果是顺序执行全部完成值为1 无序全部完成值为4
-							if (chainAll || chainError) emit(true, isQueue, sortChains, isQueue ? 1 : 4 ).call(_this, type, chains.arg);
-							//调用任务链事件 
+							//如果全部成功或全部失败强制执行全部完成任务，执行顺序完成与无序完成
+							if (chainAll || chainError){
+								emit(true, isQueue, sortChains, 1 ).call(_this, type, chains.arg);
+								emit(true, isQueue, sortChains, 4 ).call(_this, type, chains.arg);
+							}
+							//根据流程类型调用对应的事件 6种类型
 							emit(true, isQueue, sortChains, chainType).call(_this, type, chains.arg);
+							//如果无序的操作 巧合的执行成了有序的将导致无序不会触发，因此即使是有序的也要执行异步回调函数，同时将流程方式+3 
+							if(isQueue) emit(true, isQueue, sortChains, chainType +3 ).call(_this, type, chains.arg);
 						}
 						//任务链完成还原初始化 重新计数并清理队列
 						chains.queue = [];
@@ -299,51 +304,51 @@ var NickEvents = function() {
 		}
 	};
 	_this.on = addListener(false, false, false, false);
-	_this.chain = addListener(false, false, false, 1);
-	_this.chainAll = addListener(false, false, false, 2);
-	_this.chainError = addListener(false, false, false, 3);
-	_this.chainAsync = addListener(false, false, false, 4);
-	_this.chainAsyncAll = addListener(false, false, false, 5);
-	_this.chainAsyncError = addListener(false, false, false, 6);
+	_this.sync = addListener(false, false, false, 1);
+	_this.syncAll = addListener(false, false, false, 2);
+	_this.syncError = addListener(false, false, false, 3);
+	_this.async = addListener(false, false, false, 4);
+	_this.asyncAll = addListener(false, false, false, 5);
+	_this.asyncError = addListener(false, false, false, 6);
 	_this.once = addListener(true, false, false, false);
-	_this.chainOnce = addListener(true, false, false, 1);
-	_this.chainAllOnce = addListener(true, false, false, 2);
-	_this.chainErrorOnce = addListener(true, false, false, 3);
-	_this.chainAsyncOnce = addListener(true, false, false, 4);
-	_this.chainAsyncAllOnce = addListener(true, false, false, 5);
-	_this.chainAsyncErrorOnce = addListener(true, false, false, 6);
+	_this.syncOnce = addListener(true, false, false, 1);
+	_this.syncAllOnce = addListener(true, false, false, 2);
+	_this.syncErrorOnce = addListener(true, false, false, 3);
+	_this.asyncOnce = addListener(true, false, false, 4);
+	_this.asyncAllOnce = addListener(true, false, false, 5);
+	_this.asyncErrorOnce = addListener(true, false, false, 6);
 	_this.addListener = addListener(false, false, false, false);
 	_this.removeListener = removeListener(false);
 	_this.removeAllListeners = removeListener(true);
 	_this.defineOn = addListener(false, false, true, false);
-	_this.defineChain = addListener(false, false, true, 1);
-	_this.defineChainAll = addListener(false, false, true, 2);
-	_this.defineChainError = addListener(false, false, true, 3);
-	_this.defineChainAsync = addListener(false, false, true, 4);
-	_this.defineChainAsyncAll = addListener(false, false, true, 5);
-	_this.defineChainAsyncError = addListener(false, false, true, 6);
+	_this.defineSync = addListener(false, false, true, 1);
+	_this.defineSyncAll = addListener(false, false, true, 2);
+	_this.defineSyncError = addListener(false, false, true, 3);
+	_this.defineAsync = addListener(false, false, true, 4);
+	_this.defineAsyncAll = addListener(false, false, true, 5);
+	_this.defineAsyncError = addListener(false, false, true, 6);
 	_this.prependDefine = addListener(false, true, true, false);
-	_this.prependDefineChain = addListener(false, true, true, 1);
-	_this.prependDefineChainAll = addListener(false, true, true, 2);
-	_this.prependDefineChainError = addListener(false, true, true, 3);
-	_this.prependDefineChainAsync = addListener(false, true, true, 4);
-	_this.prependDefineChainAsyncAll = addListener(false, true, true, 5);
-	_this.prependDefineChainAsyncError = addListener(false, true, true, 6);
+	_this.prependDefineSync = addListener(false, true, true, 1);
+	_this.prependDefineSyncAll = addListener(false, true, true, 2);
+	_this.prependDefineSyncError = addListener(false, true, true, 3);
+	_this.prependDefineAsync = addListener(false, true, true, 4);
+	_this.prependDefineAsyncAll = addListener(false, true, true, 5);
+	_this.prependDefineAsyncError = addListener(false, true, true, 6);
 	_this.prependOn = addListener(false, true, false, false);
-	_this.prependChain = addListener(false, true, false, 1);
-	_this.prependChainAll = addListener(false, true, false, 2);
-	_this.prependChainError = addListener(false, true, false, 3);
-	_this.prependChainAsync = addListener(false, true, false, 4);
-	_this.prependChainAsyncAll = addListener(false, true, false, 5);
-	_this.prependChainAsyncError = addListener(false, true, false, 6);
+	_this.prependSync = addListener(false, true, false, 1);
+	_this.prependSyncAll = addListener(false, true, false, 2);
+	_this.prependSyncError = addListener(false, true, false, 3);
+	_this.prependAsync = addListener(false, true, false, 4);
+	_this.prependAsyncAll = addListener(false, true, false, 5);
+	_this.prependAsyncError = addListener(false, true, false, 6);
 	_this.prependOnce = addListener(true, true, false, false);
-	_this.prependChainOnce = addListener(true, true, false, 1);
-	_this.prependChainAllOnce = addListener(true, true, false, 2);
-	_this.prependChainErrorOnce = addListener(true, true, false, 3);
-	_this.prependChainAsyncOnce = addListener(true, true, false, 4);
-	_this.prependChainAsyncAllOnce = addListener(true, true, false, 5);
-	_this.prependChainAsyncErrorOnce = addListener(true, true, false, 6);
+	_this.prependSyncOnce = addListener(true, true, false, 1);
+	_this.prependSyncAllOnce = addListener(true, true, false, 2);
+	_this.prependSyncErrorOnce = addListener(true, true, false, 3);
+	_this.prependAsyncOnce = addListener(true, true, false, 4);
+	_this.prependAsyncAllOnce = addListener(true, true, false, 5);
+	_this.prependAsyncErrorOnce = addListener(true, true, false, 6);
 	_this.setMaxListeners = setMaxListeners;
 	_this.maxListeners = _maxListeners;
 	_this.emit = emit();
-}
+};

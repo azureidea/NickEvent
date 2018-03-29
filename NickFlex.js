@@ -40,8 +40,10 @@
 				var resize = function(){
 					//如果body的可视宽度大于最大宽度重置body宽度为最小宽且居中
 					if(_body.clientWidth > maxWidth){
-						_body.style.cssText+='width:'+minWidth+'px;height:100%;margin:0 auto;';
+						_body.style.cssText+='width:'+minWidth+'px;';
 					}
+					//同时限制html body溢出隐藏，因此缩放后的container已经超出body和html范围
+					_document.documentElement.style.cssText += _body.style.cssText+='height:100%;margin:0 auto;overflow:hidden;';
 					/**
 					 * @type {Element} container body的第一个子元素 所有内容必须写在body中的第一个子元素中
 					 * @type {Number}  clientWidth body的可视区域宽度
@@ -54,8 +56,8 @@
 					var clientHeight = _body.clientHeight;
 					var scale = clientWidth / designWidth;
 					var zoom = designWidth / clientWidth;
-					//设置body的第一个子元素节点的宽高缩放等属性完成适配初始化
-					container.style.cssText+='width:100%;-webkit-transform:scale('+scale+');transform:scale('+scale+');-webkit-transform-origin:left top;transform-origin:left top;height:'+clientHeight*zoom+'px;width:'+designWidth+'px;';
+					//设置body的第一个子元素节点的宽高缩放等属性完成适配初始化,container窗口将替代body成为主容器，默认允许溢出且溢出滚动
+					container.style.cssText+='overflow:auto;-webkit-overflow-scrolling: touch;width:100%;-webkit-transform:scale('+scale+');transform:scale('+scale+');-webkit-transform-origin:left top;transform-origin:left top;height:'+clientHeight*zoom+'px;width:'+designWidth+'px;';
 				};
 				//未指定设计稿宽则默认为750
 				designWidth = designWidth - 0 || 750;

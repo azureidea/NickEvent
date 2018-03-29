@@ -81,6 +81,10 @@
 						resize();
 					});
 				}
+				//窗口变化时重新检测调整适配
+				_window.addEventListener('resize', function(){
+				      resize();
+				});
 			}
 		};
 		return flex;

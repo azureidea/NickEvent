@@ -33,12 +33,14 @@
 		 * @type {Object} flex 进行适配操作的对象
 		 * @type {Array} _metas meta标签列表用于检测是否设置meta标签及缩放比例
 		 * @type {Boolean} _hasViewPort 判断是否有viewport标签
+		 * @type {Number} _minWidth 保存用户指定的在PC或大屏下显示的最小宽度
 		 */
 		var _window = /Window|global/i.test({}.toString.call(win).slice(8, -1)) ? win : window;
 		var _document = _window.document;
 		var _body = _document.body;
 		var _metas;
 		var _hasViewPort;
+		var _minWidth;
 		var flex = {
 			/**
 			 * 
@@ -54,7 +56,7 @@
 					_hasViewPort = !!_metas.length;
 					//没有viewport创建一个
 					_metas = !_hasViewPort ? [document.createElement('meta')] : _metas;
-					//设置viewport属性并将标签插入head
+					//设置viewport属性
 					if(!_hasViewPort){
 						_metas[0].name = 'viewport';
 						document.querySelector('head').appendChild(_metas[0]);
@@ -64,8 +66,8 @@
 						//对于设置viewport的meta标签强制指定content属性  设置1比1缩放，禁用双击缩放，iphonex则viewport-fit=cover解决刘海问题
 						_meta.content = 'width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
 					});
-					//如果body的可视宽度大于最大宽度重置body宽度为最小宽且居中
-					if(_body.clientWidth > maxWidth){
+					//如果body的可视宽度大于最大宽度或者未指定maxWidth都将对最小显示宽度进行重置
+					if(_body.clientWidth > maxWidth || !maxWidth){
 						_body.style.cssText+='width:'+minWidth+'px;';
 					}
 					//同时限制html body溢出隐藏，因此缩放后的container已经超出body和html范围
@@ -85,12 +87,20 @@
 					//设置body的第一个子元素节点的宽高缩放等属性完成适配初始化,container窗口将替代body成为主容器，默认允许溢出且溢出滚动
 					container.style.cssText+='overflow:auto;-webkit-overflow-scrolling: touch;width:100%;-webkit-transform:scale('+scale+');transform:scale('+scale+');-webkit-transform-origin:left top;transform-origin:left top;height:'+clientHeight*zoom+'px;width:'+designWidth+'px;';
 				};
+				//重置视口最大宽度
+				var resizeWidth = function(){
+					//获取可视区域宽度判断屏幕宽
+					var clientWidth = document.documentElement.clientWidth;
+					//小于750宽的设备以设计稿宽一半显示，一般750的设计稿以375显示， 大于1000并且小于1199的以750显示 针对ipad pro， 大于750但小于1100的以640显示对应ipad ，其它超过1199的PC默认以设计稿一半显示。
+					minWidth = _minWidth ||  (clientWidth > 750 ? (clientWidth > 1000 && clientWidth < 1199  ?  750 : ( clientWidth > 1100 ? designWidth/2 : 640 )) : designWidth/2);
+				}
 				//未指定设计稿宽则默认为750
 				designWidth = designWidth - 0 || 750;
-				//未指定最小显示宽度则默认为设计稿一半
-				minWidth = minWidth -0 || designWidth / 2;
 				//未指定最大宽度，即PC与移动端区分的最大宽度值，默认为768 ，即ipad依然正常缩放显示，而ipad pro则视为PC 
-				maxWidth = maxWidth -0 || 768;
+				maxWidth = maxWidth -0 || 0;
+				//获取在PC或大屏下用户强制设置的最小显示宽度,若未指定则自动适配
+				_minWidth = minWidth - 0; 
+				resizeWidth();
 				if(_body){
 					//body加载立即执行重置
 					resize();
@@ -103,7 +113,8 @@
 				}
 				//窗口变化时重新检测调整适配
 				_window.addEventListener('resize', function(){
-					resize();
+					  resizeWidth();
+				      resize();
 				});
 			}
 		};

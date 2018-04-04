@@ -70,8 +70,8 @@
 					if( (maxWidth && _body.clientWidth > maxWidth) || (!maxWidth && document.documentElement.clientWidth > 375)){
 						_body.style.cssText+='width:'+minWidth+'px;';
 					}
-					//同时限制html body溢出隐藏，因此缩放后的container已经超出body和html范围
-					_document.documentElement.style.cssText += _body.style.cssText+='height:100%;margin:0 auto;overflow:hidden;';
+					//限制body溢出隐藏，因此缩放后的container已经超出body范围
+					_body.style.cssText+='height:100%;margin:0 auto;overflow:hidden;';
 					/**
 					 * @type {Element} container body的第一个子元素 所有内容必须写在body中的第一个子元素中
 					 * @type {Number}  clientWidth body的可视区域宽度

@@ -31,10 +31,14 @@
 		 * @type {Document} _document 要操作的document文档对象
 		 * @type {Element} _body 要操作的body对象
 		 * @type {Object} flex 进行适配操作的对象
+		 * @type {Array} _metas meta标签列表用于检测是否设置meta标签及缩放比例
+		 * @type {Boolean} _hasViewPort 判断是否有viewport标签
 		 */
 		var _window = /Window|global/i.test({}.toString.call(win).slice(8, -1)) ? win : window;
 		var _document = _window.document;
 		var _body = _document.body;
+		var _metas;
+		var _hasViewPort;
 		var flex = {
 			/**
 			 * 
@@ -44,6 +48,22 @@
 			 */
 			resize:function(designWidth, minWidth, maxWidth){
 				var resize = function(){
+					//获取所有viewport标签
+					_metas = document.querySelectorAll('meta[name="viewport"]');
+					//判断是否有viewport
+					_hasViewPort = !!_metas.length;
+					//没有viewport创建一个
+					_metas = !_hasViewPort ? [document.createElement('meta')] : _metas;
+					//设置viewport属性并将标签插入head
+					if(!_hasViewPort){
+						_metas[0].name = 'viewport';
+						document.querySelector('head').appendChild(_metas[0]);
+					}
+					//遍历meta标签强制设置缩放为1比1
+					[].forEach.call(_metas, function(_meta){
+						//对于设置viewport的meta标签强制指定content属性  设置1比1缩放，禁用双击缩放，iphonex则viewport-fit=cover解决刘海问题
+						_meta.content = 'width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+					});
 					//如果body的可视宽度大于最大宽度重置body宽度为最小宽且居中
 					if(_body.clientWidth > maxWidth){
 						_body.style.cssText+='width:'+minWidth+'px;';
@@ -83,7 +103,7 @@
 				}
 				//窗口变化时重新检测调整适配
 				_window.addEventListener('resize', function(){
-				      resize();
+					resize();
 				});
 			}
 		};

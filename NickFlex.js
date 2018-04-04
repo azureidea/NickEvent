@@ -66,8 +66,8 @@
 						//对于设置viewport的meta标签强制指定content属性  设置1比1缩放，禁用双击缩放，iphonex则viewport-fit=cover解决刘海问题
 						_meta.content = 'width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
 					});
-					//如果body的可视宽度大于最大宽度或者未指定maxWidth都将对最小显示宽度进行重置
-					if(_body.clientWidth > maxWidth || !maxWidth){
+					//如果指定最大宽度且body宽大于最大宽，或者未指定最大宽并且页面宽大于375，这两种条件下重置最小宽度
+					if( (maxWidth && _body.clientWidth > maxWidth) || (!maxWidth && document.documentElement.clientWidth > 375)){
 						_body.style.cssText+='width:'+minWidth+'px;';
 					}
 					//同时限制html body溢出隐藏，因此缩放后的container已经超出body和html范围

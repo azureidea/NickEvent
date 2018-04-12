@@ -85,7 +85,7 @@
 					var scale = clientWidth / designWidth;
 					var zoom = designWidth / clientWidth;
 					//设置body的第一个子元素节点的宽高缩放等属性完成适配初始化,container窗口将替代body成为主容器，默认允许溢出且溢出滚动
-					container.style.cssText+='overflow:auto;-webkit-overflow-scrolling: touch;width:100%;-webkit-transform:scale('+scale+');transform:scale('+scale+');-webkit-transform-origin:left top;transform-origin:left top;height:'+clientHeight*zoom+'px;width:'+designWidth+'px;';
+					container.style.cssText+='-webkit-box-sizing:border-box;box-sizing:border-box;overflow:auto;-webkit-overflow-scrolling: touch;width:100%;-webkit-transform:scale('+scale+');transform:scale('+scale+');-webkit-transform-origin:left top;transform-origin:left top;height:'+clientHeight*zoom+'px;width:'+designWidth+'px;';
 				};
 				//重置视口最大宽度
 				var resizeWidth = function(){

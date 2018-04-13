@@ -41,6 +41,7 @@
 		var _metas;
 		var _hasViewPort;
 		var _minWidth;
+		var useMinwidth;
 		var flex = {
 			/**
 			 * 
@@ -80,8 +81,8 @@
 					 * @type {Number}  zoom  高度需要放大的比例，当进行scale缩放时导致高度跟着缩放，为了让高度适应屏幕高度达到百分百的高必须将高度值*放大比例进行高度补偿。假设body高度750 scale0.5之后高度只有375半屏高度，因此先将高度750*2 然后再scale0.5保持高度依然是一屏高。
 					 */
 					var container = _body.firstElementChild;
-					var clientWidth = _body.clientWidth;
-					var clientHeight = _body.clientHeight;
+					var clientWidth = useMinwidth ? minWidth : _document.documentElement.clientWidth;
+					var clientHeight = _document.documentElement.clientHeight;
 					var scale = clientWidth / designWidth;
 					var zoom = designWidth / clientWidth;
 					//设置body的第一个子元素节点的宽高缩放等属性完成适配初始化,container窗口将替代body成为主容器，默认允许溢出且溢出滚动
@@ -91,8 +92,10 @@
 				var resizeWidth = function(){
 					//获取可视区域宽度判断屏幕宽
 					var clientWidth = document.documentElement.clientWidth;
+					//判断是否使用minwidth指定的最小宽度，如果使用则在适配计算时不能使用原有的clientWidth而应该使用指定的minWidth
+					useMinwidth = clientWidth > 750;
 					//小于750宽的设备以设计稿宽一半显示，一般750的设计稿以375显示， 大于1000并且小于1199的以750显示 针对ipad pro， 大于750但小于1100的以640显示对应ipad ，其它超过1199的PC默认以设计稿一半显示。
-					minWidth = _minWidth ||  (clientWidth > 750 ? (clientWidth > 1000 && clientWidth < 1199  ?  750 : ( clientWidth > 1100 ? designWidth/2 : 640 )) : designWidth/2);
+					minWidth = _minWidth ||  (useMinwidth ? (clientWidth > 1000 && clientWidth < 1199  ?  750 : ( clientWidth > 1100 ? designWidth/2 : 640 )) : designWidth/2);
 				}
 				//未指定设计稿宽则默认为750
 				designWidth = designWidth - 0 || 750;

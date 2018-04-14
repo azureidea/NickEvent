@@ -103,7 +103,6 @@
 				maxWidth = maxWidth -0 || 0;
 				//获取在PC或大屏下用户强制设置的最小显示宽度,若未指定则自动适配
 				_minWidth = minWidth - 0; 
-				resizeWidth();
 				if(_body){
 					//body加载立即执行重置
 					resize();
@@ -116,7 +115,7 @@
 				}
 				//窗口变化时重新检测调整适配
 				_window.addEventListener('resize', function(){
-					  resizeWidth();
+				      resizeWidth();
 				      resize();
 				});
 			}

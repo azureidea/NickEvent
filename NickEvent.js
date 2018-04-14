@@ -301,6 +301,7 @@ var NickEvents = function() {
 					length--;
 				}
 			}
+			return _this;
 		}
 	};
 	_this.on = addListener(false, false, false, false);
